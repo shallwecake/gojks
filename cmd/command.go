@@ -22,10 +22,10 @@ var RootCmd = &cobra.Command{
 
 // Publish 定义子命令
 var Publish = &cobra.Command{
-	Use:     "publish",
-	Aliases: []string{"pub"}, // 定义别名
-	Short:   "发布应用",
-	Args:    cobra.ExactArgs(1), // 确保必须提供1个参数
+	Use: "pub",
+	//Aliases: []string{"pub"}, // 定义别名
+	Short: "发布应用",
+	Args:  cobra.ExactArgs(1), // 确保必须提供1个参数
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
 		engine := store.InitDb()
@@ -101,10 +101,10 @@ var Publish = &cobra.Command{
 }
 
 var CreateConfig = &cobra.Command{
-	Use:     "create",
-	Aliases: []string{"new", "cre"},
-	Short:   "创建配置",
-	Args:    cobra.ExactArgs(2), // 确保必须提供两个参数
+	Use: "add",
+	//Aliases: []string{"new", "cre"},
+	Short: "创建配置",
+	Args:  cobra.ExactArgs(2), // 确保必须提供两个参数
 	Run: func(cmd *cobra.Command, args []string) {
 		url := args[0]
 		auth := args[1]
