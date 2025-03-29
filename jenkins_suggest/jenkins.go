@@ -1,4 +1,4 @@
-package main
+package jenkins_suggest
 
 import (
 	"encoding/json"

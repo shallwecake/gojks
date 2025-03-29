@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"gojks"
+	"gojks/jenkins_suggest"
 	"testing"
 )
 
@@ -10,7 +10,6 @@ var (
 	taskName = "declare"
 )
 
-// jenkins, err := gojenkins.CreateJenkins(nil, "https://jenkins.gw-greenenergy.com/", "pangwangbin", "wongbin123").Init(ctx)
 func TestInnit(t *testing.T) {
 
 	jenkinsURL := "http://localhost:8500"
@@ -18,11 +17,11 @@ func TestInnit(t *testing.T) {
 	username := "admin"
 	apiToken := "admin"
 
-	auth := &main.Auth{
+	auth := &jenkins_suggest.Auth{
 		Username: username,
 		ApiToken: apiToken,
 	}
-	jenkins := main.NewJenkins(auth, jenkinsURL)
+	jenkins := jenkins_suggest.NewJenkins(auth, jenkinsURL)
 	//jenkins.GetJob()
 	names, _ := jenkins.Query(jobName)
 

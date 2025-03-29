@@ -3,6 +3,7 @@ module gojks
 go 1.24
 
 require (
+	github.com/bndr/gojenkins v1.1.0
 	github.com/dgraph-io/badger/v3 v3.2103.5
 	github.com/spf13/cobra v1.9.1
 	modernc.org/sqlite v1.36.3
