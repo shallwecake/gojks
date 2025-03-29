@@ -11,7 +11,6 @@ import (
 
 type Config struct {
 	Id       int64  `xorm:"id pk autoincr"` // 主键，自增
-	Env      string `xorm:"env notnull"`
 	Url      string `xorm:"url notnull"`
 	Username string `xorm:"username notnull"`
 	Password string `xorm:"password notnull"`
@@ -33,7 +32,7 @@ func InitDb() *xorm.Engine {
 	}
 
 	filename := filepath.Join(homeDir, "jconfig.db") // 自动处理分隔符
-	fmt.Println("数据库路径:", filename)
+
 	// 打开 SQLite 数据库连接
 	engine, err := xorm.NewEngine("sqlite", filename)
 	if err != nil {
@@ -46,7 +45,7 @@ func InitDb() *xorm.Engine {
 }
 
 func Save(engine *xorm.Engine, config *Config) {
-	has, _ := engine.Where("env=?", config.Env).Get(config)
+	has, _ := engine.Where("url=?", config.Url).Get(config)
 	if !has {
 		if _, err := engine.Insert(config); err != nil {
 			panic("创建失败")
@@ -75,9 +74,9 @@ func Ls(engine *xorm.Engine) {
 	var configs []Config
 	_ = engine.Find(&configs)
 	if len(configs) != 0 {
-		fmt.Printf("%s\t%s\t%s\t%s\n", "序号", "环境", "地址", "授权")
+		fmt.Printf("%s\t%s\t%s\t%s\n", "序号", "地址", "授权")
 		for _, config := range configs {
-			fmt.Printf("%d\t%s\t%s\t%s:%s\n", config.Id, config.Env, config.Url, config.Username, config.Password)
+			fmt.Printf("%d\t%s\t%s:%s\n", config.Id, config.Url, config.Username, config.Password)
 		}
 	}
 }
@@ -101,7 +100,7 @@ func UseLs(engine *xorm.Engine) int64 {
 
 	config := Get(engine, data.Id)
 
-	fmt.Printf("%d\t%s\t%s\t%s:%s\n", config.Id, config.Env, config.Url, config.Username, config.Password)
+	fmt.Printf("%d\t%s\t%s:%s\n", config.Id, config.Url, config.Username, config.Password)
 
 	return data.Id
 }
