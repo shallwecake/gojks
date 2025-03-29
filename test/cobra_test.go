@@ -45,21 +45,18 @@ var publish = &cobra.Command{
 	Short:   "发布应用",
 	Args:    cobra.ExactArgs(1), // 确保必须提供两个参数
 	Run: func(cmd *cobra.Command, args []string) {
-		appName := args[0]
-		engine := storage.InitDb()
-		defer storage.CloseDb(engine)
-		id := storage.GetUse(engine)
-		config := storage.Get(engine, id)
-		auth := &jenkins.Auth{
-			Username: config.Username,
-			ApiToken: config.Password,
-		}
+		//appName := args[0]
+		//engine := storage.InitDb()
+		//defer storage.CloseDb(engine)
+		//id := storage.GetUse(engine)
+		//config := storage.Get(engine, id)
+		//auth := &jenkins.Auth{
+		//	Username: config.Username,
+		//	ApiToken: config.Password,
+		//}
+		//
+		//jenkins := jenkins.NewJenkins(auth, config.Url)
 
-		jenkins := jenkins.NewJenkins(auth, config.Url)
-
-		job, _ := jenkins.GetJob(appName)
-
-		_ = jenkins.Build(job, nil)
 	},
 }
 
