@@ -63,18 +63,17 @@ func Del(engine *xorm.Engine, id string) {
 	}
 }
 
-func Get(engine *xorm.Engine, id int64) Config {
+func Get(engine *xorm.Engine, id int64) *Config {
 	var config Config
 	_, _ = engine.ID(id).Get(&config)
-
-	return config
+	return &config
 }
 
 func Ls(engine *xorm.Engine) {
 	var configs []Config
 	_ = engine.Find(&configs)
 	if len(configs) != 0 {
-		fmt.Printf("%s\t%s\t%s\t%s\n", "序号", "地址", "授权")
+		fmt.Printf("%s\t%s\t%s\n", "序号", "地址", "授权")
 		for _, config := range configs {
 			fmt.Printf("%d\t%s\t%s:%s\n", config.Id, config.Url, config.Username, config.Password)
 		}
@@ -100,7 +99,9 @@ func UseLs(engine *xorm.Engine) int64 {
 
 	config := Get(engine, data.Id)
 
-	fmt.Printf("%d\t%s\t%s:%s\n", config.Id, config.Url, config.Username, config.Password)
+	if len(config.Url) > 0 {
+		fmt.Printf("%d\t%s\t%s:%s\n", config.Id, config.Url, config.Username, config.Password)
+	}
 
 	return data.Id
 }

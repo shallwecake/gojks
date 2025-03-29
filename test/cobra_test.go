@@ -24,7 +24,7 @@ func TestCmd(t *testing.T) {
 	//rootCmd.SetArgs([]string{"pub"})
 	//rootCmd.SetArgs([]string{"s"})
 	//rootCmd.SetArgs([]string{"use", "4"})
-	//rootCmd.SetArgs([]string{"uls"})
+	rootCmd.SetArgs([]string{"uls"})
 	//执行命令
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println("Error:", err)
