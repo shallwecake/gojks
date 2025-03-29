@@ -3,12 +3,10 @@ package store
 import (
 	"fmt"
 	_ "modernc.org/sqlite"
+	"os"
+	"path/filepath"
 	"strconv"
 	"xorm.io/xorm"
-)
-
-var (
-	filename = "./test.db"
 )
 
 type Config struct {
@@ -27,9 +25,17 @@ type Active struct {
 func CloseDb(engine *xorm.Engine) {
 	_ = engine.Close()
 }
+
 func InitDb() *xorm.Engine {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic("获取用户目录失败: " + err.Error())
+	}
+
+	filename := filepath.Join(homeDir, "jconfig.db") // 自动处理分隔符
+	fmt.Println("数据库路径:", filename)
 	// 打开 SQLite 数据库连接
-	engine, err := xorm.NewEngine("sqlite", "./test.db")
+	engine, err := xorm.NewEngine("sqlite", filename)
 	if err != nil {
 		panic("初始化失败")
 	}
@@ -68,9 +74,11 @@ func Get(engine *xorm.Engine, id int64) Config {
 func Ls(engine *xorm.Engine) {
 	var configs []Config
 	_ = engine.Find(&configs)
-	fmt.Printf("%s\t%s\t%s\t%s\n", "序号", "环境", "地址", "授权")
-	for _, config := range configs {
-		fmt.Printf("%d\t%s\t%s\t%s:%s\n", config.Id, config.Env, config.Url, config.Username, config.Password)
+	if len(configs) != 0 {
+		fmt.Printf("%s\t%s\t%s\t%s\n", "序号", "环境", "地址", "授权")
+		for _, config := range configs {
+			fmt.Printf("%d\t%s\t%s\t%s:%s\n", config.Id, config.Env, config.Url, config.Username, config.Password)
+		}
 	}
 }
 
