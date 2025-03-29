@@ -1,10 +1,11 @@
 package test
 
 import (
+	"context"
 	"fmt"
+	"github.com/bndr/gojenkins"
 	"github.com/spf13/cobra"
-	"gojks/jenkins"
-	"gojks/storage"
+	"gojks"
 	"strings"
 	"testing"
 )
@@ -45,18 +46,30 @@ var publish = &cobra.Command{
 	Short:   "发布应用",
 	Args:    cobra.ExactArgs(1), // 确保必须提供两个参数
 	Run: func(cmd *cobra.Command, args []string) {
-		//appName := args[0]
-		//engine := storage.InitDb()
-		//defer storage.CloseDb(engine)
-		//id := storage.GetUse(engine)
-		//config := storage.Get(engine, id)
-		//auth := &jenkins.Auth{
-		//	Username: config.Username,
-		//	ApiToken: config.Password,
-		//}
-		//
-		//jenkins := jenkins.NewJenkins(auth, config.Url)
+		appName := args[0]
+		engine := main.InitDb()
+		defer main.CloseDb(engine)
+		id := main.GetUse(engine)
+		config := main.Get(engine, id)
+		auth := &main.Auth{
+			Username: config.Username,
+			ApiToken: config.Password,
+		}
 
+		jenkins := main.NewJenkins(auth, config.Url)
+		names, _ := jenkins.Query(appName)
+
+		jenkinsURL := "http://localhost:8500"
+		jobName := "test-jenkins-Pipeline"
+		username := "admin"
+		apiToken := "admin"
+		ctx := context.Background()
+		jenkins := gojenkins.CreateJenkins(nil, jenkinsURL, username, apiToken)
+		_, err := jenkins.Init(ctx)
+		if err != nil {
+			panic("连接 Jenkins 失败: " + err.Error())
+		}
+		fmt.Println("Jenkins 连接成功")
 	},
 }
 
@@ -67,18 +80,18 @@ var search = &cobra.Command{
 	Args:    cobra.ExactArgs(1), // 确保必须提供两个参数
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
-		engine := storage.InitDb()
-		defer storage.CloseDb(engine)
-		id := storage.GetUse(engine)
-		config := storage.Get(engine, id)
+		engine := main.InitDb()
+		defer main.CloseDb(engine)
+		id := main.GetUse(engine)
+		config := main.Get(engine, id)
 
-		auth := &jenkins.Auth{
+		auth := &main.Auth{
 			Username: config.Username,
 			ApiToken: config.Password,
 		}
 
-		jenkins := jenkins.NewJenkins(auth, config.Url)
-		names, _ := jenkins.FuzzyJobName(name)
+		jenkins := main.NewJenkins(auth, config.Url)
+		names, _ := jenkins.Query(name)
 
 		for _, name := range names {
 			fmt.Println(name)
@@ -96,15 +109,15 @@ var createConfig = &cobra.Command{
 		url := args[1]
 		auth := args[2]
 		slice := strings.Split(auth, ":")
-		info := &storage.Config{
+		info := &main.Config{
 			Env:      env,
 			Url:      url,
 			Username: slice[0],
 			Password: slice[1],
 		}
-		engine := storage.InitDb()
-		defer storage.CloseDb(engine)
-		storage.Save(engine, info)
+		engine := main.InitDb()
+		defer main.CloseDb(engine)
+		main.Save(engine, info)
 	},
 }
 
@@ -113,9 +126,9 @@ var lsConfig = &cobra.Command{
 	Short: "遍历配置",
 	Args:  cobra.ExactArgs(0), // 确保必须提供两个参数
 	Run: func(cmd *cobra.Command, args []string) {
-		engine := storage.InitDb()
-		defer storage.CloseDb(engine)
-		storage.Ls(engine)
+		engine := main.InitDb()
+		defer main.CloseDb(engine)
+		main.Ls(engine)
 	},
 }
 
@@ -124,9 +137,9 @@ var delConfig = &cobra.Command{
 	Short: "删除配置",
 	Args:  cobra.ExactArgs(1), // 确保必须提供两个参数
 	Run: func(cmd *cobra.Command, args []string) {
-		engine := storage.InitDb()
-		defer storage.CloseDb(engine)
-		storage.Del(engine, args[0])
+		engine := main.InitDb()
+		defer main.CloseDb(engine)
+		main.Del(engine, args[0])
 	},
 }
 
@@ -135,9 +148,9 @@ var useConfig = &cobra.Command{
 	Short: "使用配置",
 	Args:  cobra.ExactArgs(1), // 确保必须提供两个参数
 	Run: func(cmd *cobra.Command, args []string) {
-		engine := storage.InitDb()
-		defer storage.CloseDb(engine)
-		storage.Use(engine, args[0])
+		engine := main.InitDb()
+		defer main.CloseDb(engine)
+		main.Use(engine, args[0])
 	},
 }
 
@@ -146,8 +159,8 @@ var useLs = &cobra.Command{
 	Short: "使用配置",
 	Args:  cobra.ExactArgs(0), // 确保必须提供两个参数
 	Run: func(cmd *cobra.Command, args []string) {
-		engine := storage.InitDb()
-		defer storage.CloseDb(engine)
-		storage.UseLs(engine)
+		engine := main.InitDb()
+		defer main.CloseDb(engine)
+		main.UseLs(engine)
 	},
 }

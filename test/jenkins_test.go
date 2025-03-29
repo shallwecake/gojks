@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"gojks/jenkins"
+	"gojks"
 	"testing"
 )
 
@@ -18,11 +18,11 @@ func TestInnit(t *testing.T) {
 	username := "admin"
 	apiToken := "admin"
 
-	auth := &jenkins.Auth{
+	auth := &main.Auth{
 		Username: username,
 		ApiToken: apiToken,
 	}
-	jenkins := jenkins.NewJenkins(auth, jenkinsURL)
+	jenkins := main.NewJenkins(auth, jenkinsURL)
 	//jenkins.GetJob()
 	names, _ := jenkins.Query(jobName)
 
