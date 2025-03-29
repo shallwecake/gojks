@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// 添加子命令到根命令
-	cmd.RootCmd.AddCommand(cmd.CreateConfig)
+	cmd.RootCmd.AddCommand(cmd.AddConfig)
 	cmd.RootCmd.AddCommand(cmd.LsConfig)
 	cmd.RootCmd.AddCommand(cmd.DelConfig)
 	cmd.RootCmd.AddCommand(cmd.UseConfig)

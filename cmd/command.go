@@ -100,7 +100,7 @@ var Publish = &cobra.Command{
 	},
 }
 
-var CreateConfig = &cobra.Command{
+var AddConfig = &cobra.Command{
 	Use: "add",
 	//Aliases: []string{"new", "cre"},
 	Short: "创建配置",

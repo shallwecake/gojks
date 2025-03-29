@@ -9,7 +9,7 @@ import (
 
 func TestCmd(t *testing.T) {
 	rootCmd := &cobra.Command{Use: "app"}
-	rootCmd.AddCommand(cmd.CreateConfig)
+	rootCmd.AddCommand(cmd.AddConfig)
 	rootCmd.AddCommand(cmd.LsConfig)
 	rootCmd.AddCommand(cmd.DelConfig)
 	rootCmd.AddCommand(cmd.UseConfig)
@@ -18,7 +18,7 @@ func TestCmd(t *testing.T) {
 
 	// 模拟命令行输入
 	//rootCmd.SetArgs([]string{"pub"})
-	//rootCmd.SetArgs([]string{"create", "http://localhost:8500", "admin:admin"})
+	//rootCmd.SetArgs([]string{"add", "http://localhost:8500", "admin:admin"})
 	//rootCmd.SetArgs([]string{"del", "3"})
 	//rootCmd.SetArgs([]string{"ls"})
 	//rootCmd.SetArgs([]string{"pub"})
