@@ -28,15 +28,10 @@ var Publish = &cobra.Command{
 		defer store.CloseDb(engine)
 		id := store.GetUse(engine)
 		config := store.Get(engine, id)
-
 		suggest := Suggest(config, name)
-
-		var wg sync.WaitGroup
-		wg.Add(1) // 计数器+1
-
 		if len(suggest) == 0 {
 
-			fmt.Printf("没有找到%s...\n", name)
+			fmt.Printf("没有找到构建任务 %s\n", name)
 
 		} else {
 			ctx := context.Background()
@@ -46,11 +41,12 @@ var Publish = &cobra.Command{
 				panic("连接 Jenkins 失败: " + err.Error())
 			}
 			//fmt.Println("Jenkins 连接成功")
-
+			var wg sync.WaitGroup
+			wg.Add(1) // 计数器+1
 			// 构建
 			SyncPublish(jenkins, ctx, suggest, &wg)
+			wg.Wait()
 		}
-		wg.Wait()
 	},
 }
 
