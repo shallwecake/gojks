@@ -1,4 +1,4 @@
-module gojks
+module github.com/shallwecake/gojks
 
 go 1.24
 
