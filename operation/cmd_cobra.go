@@ -41,11 +41,8 @@ var Publish = &cobra.Command{
 				panic("连接 Jenkins 失败: " + err.Error())
 			}
 			//fmt.Println("Jenkins 连接成功")
-			var wg sync.WaitGroup
-			wg.Add(1) // 计数器+1
 			// 构建
-			SyncPublish(jenkins, ctx, suggest, &wg)
-			wg.Wait()
+			PublishJob(jenkins, ctx, suggest)
 		}
 	},
 }

@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"github.com/shallwecake/gojks/jenkins_suggest"
+	"github.com/shallwecake/gojks/ifunction"
 	"testing"
 )
 
@@ -17,11 +17,11 @@ func TestInnit(t *testing.T) {
 	username := "admin"
 	apiToken := "admin"
 
-	auth := &jenkins_suggest.Auth{
+	auth := &ifunction.Auth{
 		Username: username,
 		ApiToken: apiToken,
 	}
-	jenkins := jenkins_suggest.NewJenkins(auth, jenkinsURL)
+	jenkins := ifunction.NewJenkins(auth, jenkinsURL)
 	//jenkins.GetJob()
 	names, _ := jenkins.Query(jobName)
 

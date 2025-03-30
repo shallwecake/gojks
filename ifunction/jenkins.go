@@ -1,4 +1,4 @@
-package jenkins_suggest
+package ifunction
 
 import (
 	"encoding/json"

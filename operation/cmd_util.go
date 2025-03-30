@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/bndr/gojenkins"
-	"github.com/shallwecake/gojks/jenkins_suggest"
+	"github.com/shallwecake/gojks/ifunction"
 	"github.com/shallwecake/gojks/store"
 	"os"
 	"strconv"
@@ -59,16 +59,17 @@ func msgPrint(name string) {
 	fmt.Print("\033[?25l") // 隐藏光标（可选）
 }
 
+// 清空整行
 func clearPrint() {
 	fmt.Print("\r\033[K")
 }
 
 func Suggest(config *store.Config, name string) []string {
-	auth := &jenkins_suggest.Auth{
+	auth := &ifunction.Auth{
 		Username: config.Username,
 		ApiToken: config.Password,
 	}
-	jenkins := jenkins_suggest.NewJenkins(auth, config.Url)
+	jenkins := ifunction.NewJenkins(auth, config.Url)
 	names, _ := jenkins.Query(name)
 	if len(names) == 0 {
 		return []string{}
@@ -76,7 +77,10 @@ func Suggest(config *store.Config, name string) []string {
 	return names
 }
 
-func SyncPublish(jenkins *gojenkins.Jenkins, ctx context.Context, suggest []string, wg *sync.WaitGroup) {
+func PublishJob(jenkins *gojenkins.Jenkins, ctx context.Context, suggest []string) {
+
+	var wg sync.WaitGroup
+
 	fmt.Printf("序号\t名称\n")
 	for i, item := range suggest {
 		fmt.Printf("%d\t%s\n", i, item)
@@ -99,35 +103,42 @@ func SyncPublish(jenkins *gojenkins.Jenkins, ctx context.Context, suggest []stri
 		msgPrint("正在准备构建,请稍等...")
 		time.Sleep(500 * time.Millisecond) // 避免CPU跑满
 		clearPrint()
-		//清空整行
 		isJobInQueue(jenkins, name, ctx, 0)
-		go func() {
-			running := true
-			var loopCount int
-			job, _ := jenkins.GetJob(ctx, name)
-			lastBuild, _ := job.GetLastBuild(ctx)
-			for running {
-				loopCount++
-				number := lastBuild.GetBuildNumber()
-				build, _ := job.GetBuild(ctx, number)
-				if build.IsRunning(ctx) {
-					timePrint("构建中", loopCount)
-				} else {
-					clearPrint()
-
-					fmt.Printf("构建%s", switchResult(build.GetResult()))
-
-					fmt.Print("\033[?25h") // 开启光标
-					running = false
-				}
-				time.Sleep(1 * time.Second) // 避免CPU跑满
-			}
-			wg.Done() // 协程结束时计数器-1
-		}()
+		monitorJob(jenkins, ctx, name, &wg)
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Println("读取错误:", err)
 	}
+	wg.Wait()
+}
+
+func monitorJob(jenkins *gojenkins.Jenkins, ctx context.Context, name string, wg *sync.WaitGroup) {
+	wg.Add(1) // 计数器+1
+	go func() {
+		running := true
+		var loopCount int
+		job, _ := jenkins.GetJob(ctx, name)
+		lastBuild, _ := job.GetLastBuild(ctx)
+		for running {
+			loopCount++
+			number := lastBuild.GetBuildNumber()
+			build, _ := job.GetBuild(ctx, number)
+			if build.IsRunning(ctx) {
+				timePrint("构建中", loopCount)
+			} else {
+				clearPrint()
+
+				fmt.Printf("构建%s", switchResult(build.GetResult()))
+
+				sendMsg(build.Job, switchResult(build.GetResult()))
+
+				fmt.Print("\033[?25h") // 开启光标
+				running = false
+			}
+			time.Sleep(1 * time.Second) // 避免CPU跑满
+		}
+		wg.Done() // 协程结束时计数器-1
+	}()
 }
 
 func switchResult(item interface{}) (result string) {
@@ -138,4 +149,40 @@ func switchResult(item interface{}) (result string) {
 		result = "成功"
 	}
 	return
+}
+
+func sendMsg(job *gojenkins.Job, msg string) {
+
+	// 示例：发送富文本消息
+	postMessage := map[string]interface{}{
+		"msg_type": "post",
+		"content": map[string]interface{}{
+			"post": map[string]interface{}{
+				"zh_cn": map[string]interface{}{
+					"title": fmt.Sprintf("【%s】构建%s", job.GetName(), msg),
+					"content": [][]map[string]interface{}{
+						{
+							{
+								"tag":  "text",
+								"text": "-- jenkins消息 " + nowTime(),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	_ = ifunction.SendMessageToFeishu(ifunction.WebhookURL, postMessage)
+}
+
+func nowTime() string {
+	// 时区
+	loc, _ := time.LoadLocation("Asia/Shanghai")
+
+	// 获取当前时间
+	currentTime := time.Now().In(loc)
+
+	// 格式化时间为 yyyy-dd-mm hh:mm:ss
+	return currentTime.Format("2006-02-01 15:04:05")
 }
