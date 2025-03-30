@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/bndr/gojenkins"
+	"github.com/shallwecake/gojks/store"
 	"github.com/spf13/cobra"
-	"gojks/store"
 	"strings"
 	"sync"
 )

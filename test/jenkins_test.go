@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"gojks/jenkins_suggest"
+	"github.com/shallwecake/gojks/jenkins_suggest"
 	"testing"
 )
 

@@ -2,8 +2,8 @@ package test
 
 import (
 	"fmt"
+	"github.com/shallwecake/gojks/operation"
 	"github.com/spf13/cobra"
-	"gojks/operation"
 	"testing"
 )
 

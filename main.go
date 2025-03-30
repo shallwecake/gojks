@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"gojks/operation"
+	"github.com/shallwecake/gojks/operation"
 )
 
 func main() {
