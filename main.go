@@ -2,19 +2,19 @@ package main
 
 import (
 	"fmt"
-	"gojks/cmd"
+	"gojks/operation"
 )
 
 func main() {
 	// 添加子命令到根命令
-	cmd.RootCmd.AddCommand(cmd.AddConfig)
-	cmd.RootCmd.AddCommand(cmd.LsConfig)
-	cmd.RootCmd.AddCommand(cmd.DelConfig)
-	cmd.RootCmd.AddCommand(cmd.UseConfig)
-	cmd.RootCmd.AddCommand(cmd.UseLs)
-	cmd.RootCmd.AddCommand(cmd.Publish)
+	operation.RootCmd.AddCommand(operation.AddConfig)
+	operation.RootCmd.AddCommand(operation.LsConfig)
+	operation.RootCmd.AddCommand(operation.DelConfig)
+	operation.RootCmd.AddCommand(operation.UseConfig)
+	operation.RootCmd.AddCommand(operation.UseLs)
+	operation.RootCmd.AddCommand(operation.Publish)
 	// 执行根命令
-	if err := cmd.RootCmd.Execute(); err != nil {
+	if err := operation.RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 	}
 }

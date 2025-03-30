@@ -1,17 +1,13 @@
-package cmd
+package operation
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"github.com/bndr/gojenkins"
 	"github.com/spf13/cobra"
-	"gojks/jenkins_suggest"
 	"gojks/store"
-	"os"
-	"strconv"
 	"strings"
-	"time"
+	"sync"
 )
 
 // RootCmd 定义根命令
@@ -32,71 +28,29 @@ var Publish = &cobra.Command{
 		defer store.CloseDb(engine)
 		id := store.GetUse(engine)
 		config := store.Get(engine, id)
-		auth := &jenkins_suggest.Auth{
-			Username: config.Username,
-			ApiToken: config.Password,
-		}
 
-		suggest := jenkins_suggest.NewJenkins(auth, config.Url)
-		names, _ := suggest.Query(name)
+		suggest := Suggest(config, name)
 
-		if len(names) == 0 {
+		var wg sync.WaitGroup
+		wg.Add(1) // 计数器+1
 
-			fmt.Printf("没有找到%s...", name)
+		if len(suggest) == 0 {
+
+			fmt.Printf("没有找到%s...\n", name)
 
 		} else {
-			fmt.Printf("序号\t名称\n")
-			for i, item := range names {
-				fmt.Printf("%d\t%s\n", i, item)
+			ctx := context.Background()
+			jenkins := gojenkins.CreateJenkins(nil, config.Url, config.Username, config.Password)
+			_, err := jenkins.Init(ctx)
+			if err != nil {
+				panic("连接 Jenkins 失败: " + err.Error())
 			}
+			fmt.Println("Jenkins 连接成功")
 
-			scanner := bufio.NewScanner(os.Stdin)
-
-			fmt.Print("请输入构建的序号：")
-			if scanner.Scan() { // 读取一行
-				input := scanner.Text() // 获取文本（自动去除换行符）
-				i, _ := strconv.Atoi(input)
-				jname := names[i]
-
-				ctx := context.Background()
-				jenkins := gojenkins.CreateJenkins(nil, config.Url, config.Username, config.Password)
-				_, err := jenkins.Init(ctx)
-				if err != nil {
-					panic("连接 Jenkins 失败: " + err.Error())
-				}
-				fmt.Println("Jenkins 连接成功")
-
-				// 触发指定任务（Job）的构建
-				_, err = jenkins.BuildJob(ctx, jname, nil)
-				if err != nil {
-					panic("触发构建失败: " + err.Error())
-				}
-
-				fmt.Printf("正在构建中，请稍后...")
-
-				go func() {
-					running := true
-
-					for running {
-						job, _ := jenkins.GetJob(ctx, jname)
-						lastBuild, _ := job.GetLastBuild(ctx)
-
-						if !lastBuild.IsRunning(ctx) {
-							result := lastBuild.GetResult()
-							fmt.Printf("构建%s", result)
-							running = false
-						}
-
-						time.Sleep(1 * time.Second) // 避免CPU跑满
-					}
-
-				}()
-			}
-			if err := scanner.Err(); err != nil {
-				fmt.Println("读取错误:", err)
-			}
+			// 构建
+			SyncPublish(jenkins, ctx, suggest, &wg)
 		}
-
+		wg.Wait()
 	},
 }
 

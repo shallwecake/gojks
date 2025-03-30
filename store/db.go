@@ -9,6 +9,13 @@ import (
 	"xorm.io/xorm"
 )
 
+var (
+	// 清空表
+	sql1 = "DROP TABLE active"
+	sql2 = "DROP TABLE config"
+	sql3 = "DELETE FROM active"
+)
+
 type Config struct {
 	Id       int64  `xorm:"id pk autoincr"` // 主键，自增
 	Url      string `xorm:"url notnull"`
@@ -61,6 +68,12 @@ func Del(engine *xorm.Engine, id string) {
 	if i > 0 {
 		Ls(engine)
 	}
+	ls := Ls(engine)
+
+	if ls == 0 {
+		_, _ = engine.Exec(sql1)
+		_, _ = engine.Exec(sql2)
+	}
 }
 
 func Get(engine *xorm.Engine, id int64) *Config {
@@ -69,7 +82,7 @@ func Get(engine *xorm.Engine, id int64) *Config {
 	return &config
 }
 
-func Ls(engine *xorm.Engine) {
+func Ls(engine *xorm.Engine) int {
 	var configs []Config
 	_ = engine.Find(&configs)
 	if len(configs) != 0 {
@@ -78,13 +91,12 @@ func Ls(engine *xorm.Engine) {
 			fmt.Printf("%d\t%s\t%s:%s\n", config.Id, config.Url, config.Username, config.Password)
 		}
 	}
+	return len(configs)
 }
 
 func Use(engine *xorm.Engine, id string) {
 
-	// 清空表
-	sql := "DELETE FROM active"
-	_, _ = engine.Exec(sql)
+	_, _ = engine.Exec(sql3)
 
 	parseInt, _ := strconv.ParseInt(id, 10, 64)
 	_, _ = engine.Insert(&Active{Id: parseInt})
