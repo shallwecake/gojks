@@ -114,7 +114,9 @@ func SyncPublish(jenkins *gojenkins.Jenkins, ctx context.Context, suggest []stri
 					timePrint("构建中", loopCount)
 				} else {
 					clearPrint()
-					fmt.Println("构建成功")
+
+					fmt.Printf("构建%s", switchResult(build.GetResult()))
+
 					fmt.Print("\033[?25h") // 开启光标
 					running = false
 				}
@@ -126,4 +128,14 @@ func SyncPublish(jenkins *gojenkins.Jenkins, ctx context.Context, suggest []stri
 	if err := scanner.Err(); err != nil {
 		fmt.Println("读取错误:", err)
 	}
+}
+
+func switchResult(item interface{}) (result string) {
+	switch item {
+	case "FAILURE":
+		result = "失败"
+	case "SUCCESS":
+		result = "成功"
+	}
+	return
 }
