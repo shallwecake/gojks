@@ -20,7 +20,7 @@ var RootCmd = &cobra.Command{
 var Publish = &cobra.Command{
 	Use: "pub",
 	//Aliases: []string{"pub"}, // 定义别名
-	Short: "发布应用",
+	Short: "发布单个应用",
 	Args:  cobra.ExactArgs(1), // 确保必须提供1个参数
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
@@ -120,7 +120,7 @@ var AddConfig = &cobra.Command{
 
 var LsConfig = &cobra.Command{
 	Use:   "ls",
-	Short: "遍历配置",
+	Short: "查看所有配置",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		engine := store.InitDb()
@@ -153,7 +153,7 @@ var UseConfig = &cobra.Command{
 
 var UseLs = &cobra.Command{
 	Use:   "uls",
-	Short: "使用配置",
+	Short: "查看当前使用配置",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		engine := store.InitDb()
