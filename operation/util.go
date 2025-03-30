@@ -52,6 +52,17 @@ func timePrint(name string, i int) {
 	fmt.Print("\033[?25l") // 隐藏光标（可选）
 }
 
+func msgPrint(name string) {
+	// 打印计时信息，\r 将光标移回行首
+	fmt.Printf("\r%s", name)
+	// 刷新输出缓冲区，确保内容立即显示
+	fmt.Print("\033[?25l") // 隐藏光标（可选）
+}
+
+func clearPrint() {
+	fmt.Print("\r\033[K")
+}
+
 func Suggest(config *store.Config, name string) []string {
 	auth := &jenkins_suggest.Auth{
 		Username: config.Username,
@@ -85,12 +96,11 @@ func SyncPublish(jenkins *gojenkins.Jenkins, ctx context.Context, suggest []stri
 			panic("触发构建失败: " + err.Error())
 		}
 
-		fmt.Printf("正在构建中，请稍后...")
-
-		time.Sleep(200 * time.Millisecond) // 避免CPU跑满
-
+		msgPrint("正在准备构建,请稍等...")
+		time.Sleep(500 * time.Millisecond) // 避免CPU跑满
+		clearPrint()
+		//清空整行
 		isJobInQueue(jenkins, name, ctx, 0)
-
 		go func() {
 			running := true
 			var loopCount int
@@ -103,7 +113,9 @@ func SyncPublish(jenkins *gojenkins.Jenkins, ctx context.Context, suggest []stri
 				if build.IsRunning(ctx) {
 					timePrint("构建中", loopCount)
 				} else {
-					fmt.Println("\t构建成功")
+					clearPrint()
+					fmt.Println("构建成功")
+					fmt.Print("\033[?25h") // 开启光标
 					running = false
 				}
 				time.Sleep(1 * time.Second) // 避免CPU跑满

@@ -45,12 +45,60 @@ var Publish = &cobra.Command{
 			if err != nil {
 				panic("连接 Jenkins 失败: " + err.Error())
 			}
-			fmt.Println("Jenkins 连接成功")
+			//fmt.Println("Jenkins 连接成功")
 
 			// 构建
 			SyncPublish(jenkins, ctx, suggest, &wg)
 		}
 		wg.Wait()
+	},
+}
+
+var PublishAll = &cobra.Command{
+	Use: "pub-all",
+	//Aliases: []string{"pub"}, // 定义别名
+	Short: "发布多个应用",
+	//Args:  cobra.ExactArgs(1), // 不限制参数
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) == 0 {
+
+			return
+		}
+
+		engine := store.InitDb()
+		defer store.CloseDb(engine)
+		id := store.GetUse(engine)
+		config := store.Get(engine, id)
+
+		ctx := context.Background()
+		jenkins := gojenkins.CreateJenkins(nil, config.Url, config.Username, config.Password)
+		_, err := jenkins.Init(ctx)
+		if err != nil {
+			panic("连接 Jenkins 失败: " + err.Error())
+		}
+
+		var wg sync.WaitGroup
+
+		for _, name := range args {
+
+			wg.Add(1)
+
+			go func() {
+
+				_, err := jenkins.BuildJob(ctx, name, nil)
+
+				if err != nil {
+					fmt.Printf("构建失败：%s\n", name)
+				}
+
+				wg.Done()
+			}()
+
+		}
+
+		wg.Wait()
+
 	},
 }
 
@@ -77,7 +125,7 @@ var AddConfig = &cobra.Command{
 var LsConfig = &cobra.Command{
 	Use:   "ls",
 	Short: "遍历配置",
-	Args:  cobra.ExactArgs(0), // 确保必须提供两个参数
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		engine := store.InitDb()
 		defer store.CloseDb(engine)
@@ -88,7 +136,7 @@ var LsConfig = &cobra.Command{
 var DelConfig = &cobra.Command{
 	Use:   "del",
 	Short: "删除配置",
-	Args:  cobra.ExactArgs(1), // 确保必须提供两个参数
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		engine := store.InitDb()
 		defer store.CloseDb(engine)
@@ -99,7 +147,7 @@ var DelConfig = &cobra.Command{
 var UseConfig = &cobra.Command{
 	Use:   "use",
 	Short: "使用配置",
-	Args:  cobra.ExactArgs(1), // 确保必须提供两个参数
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		engine := store.InitDb()
 		defer store.CloseDb(engine)
@@ -110,7 +158,7 @@ var UseConfig = &cobra.Command{
 var UseLs = &cobra.Command{
 	Use:   "uls",
 	Short: "使用配置",
-	Args:  cobra.ExactArgs(0), // 确保必须提供两个参数
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		engine := store.InitDb()
 		defer store.CloseDb(engine)

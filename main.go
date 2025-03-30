@@ -13,6 +13,7 @@ func main() {
 	operation.RootCmd.AddCommand(operation.UseConfig)
 	operation.RootCmd.AddCommand(operation.UseLs)
 	operation.RootCmd.AddCommand(operation.Publish)
+	operation.RootCmd.AddCommand(operation.PublishAll)
 	// 执行根命令
 	if err := operation.RootCmd.Execute(); err != nil {
 		fmt.Println(err)
