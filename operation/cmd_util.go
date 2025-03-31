@@ -130,7 +130,7 @@ func monitorJob(jenkins *gojenkins.Jenkins, ctx context.Context, name string, wg
 
 				fmt.Printf("构建%s", switchResult(build.GetResult()))
 
-				sendMsg(build.Job, switchResult(build.GetResult()))
+				isSendMsg(build)
 
 				fmt.Print("\033[?25h") // 开启光标
 				running = false
@@ -139,6 +139,13 @@ func monitorJob(jenkins *gojenkins.Jenkins, ctx context.Context, name string, wg
 		}
 		wg.Done() // 协程结束时计数器-1
 	}()
+}
+
+func isSendMsg(build *gojenkins.Build) {
+	if build.GetResult() == "SUCCESS" {
+		time.Sleep(1 * time.Minute)
+	}
+	sendMsg(build.Job, switchResult(build.GetResult()))
 }
 
 func switchResult(item interface{}) (result string) {
