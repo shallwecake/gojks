@@ -120,7 +120,7 @@ func monitorJob(jenkins *gojenkins.Jenkins, ctx context.Context, name string, wg
 		job, _ := jenkins.GetJob(ctx, name)
 		lastBuild, _ := job.GetLastBuild(ctx)
 		for running {
-			loopCount++
+			loopCount += 10
 			number := lastBuild.GetBuildNumber()
 			build, _ := job.GetBuild(ctx, number)
 			if build.IsRunning(ctx) {
@@ -135,7 +135,7 @@ func monitorJob(jenkins *gojenkins.Jenkins, ctx context.Context, name string, wg
 				fmt.Print("\033[?25h") // 开启光标
 				running = false
 			}
-			time.Sleep(1 * time.Second) // 避免CPU跑满
+			time.Sleep(10 * time.Second) // 避免CPU跑满
 		}
 		wg.Done() // 协程结束时计数器-1
 	}()
