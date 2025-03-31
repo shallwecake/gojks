@@ -9,7 +9,7 @@ import (
 )
 
 var (
-// WebhookURL = "https://open.feishu.cn/open-apis/bot/v2/hook/a9dd87a0-ddb8-4224-a8b1-057ba580d72a"
+	WebhookURL = ""
 )
 
 // SendMessageToFeishu 发送消息到飞书机器人

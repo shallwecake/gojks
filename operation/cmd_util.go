@@ -143,7 +143,10 @@ func monitorJob(jenkins *gojenkins.Jenkins, ctx context.Context, name string, wg
 
 func isSendMsg(build *gojenkins.Build) {
 	if build.GetResult() == "SUCCESS" {
+		clearPrint()
+		fmt.Println("正在发布")
 		time.Sleep(1 * time.Minute)
+		fmt.Println("发布完成")
 	}
 	sendMsg(build.Job, switchResult(build.GetResult()))
 }
