@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func JenkinsWebhook(has bool, name string, whk string) {
+func RancherWebhook(has bool, name string, whk string) {
 	var state string
 	if has {
 		state = "成功"
@@ -23,13 +23,13 @@ func JenkinsWebhook(has bool, name string, whk string) {
 
 	// 设置卡片标题
 	message.Card.Header.Title.Tag = "plain_text"
-	message.Card.Header.Title.Content = "jenkins构建"
+	message.Card.Header.Title.Content = "rancher容器"
 
 	// 添加卡片内容
 	message.Card.Elements = append(message.Card.Elements, map[string]interface{}{
 		"tag": "div",
 		"text": map[string]interface{}{
-			"content": "【" + name + "】构建" + state + "\t" + timeStr,
+			"content": "【" + name + "】启动" + state + "\t" + timeStr,
 			"tag":     "plain_text",
 		},
 	})

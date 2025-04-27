@@ -147,24 +147,33 @@ func MonitorRancher(name string, startTime time.Time) {
 
 	var phase string
 	var pname string
+	var pCount int
 
 	for _, pod := range pods {
 		pname = pod.Metadata.Labels["app"]
 		if strings.Contains(pname, realName) {
 			//id := pod.ID
 			phase = pod.Status.Phase
+			pCount = pod.Status.ContainerStatuses[0].RestartCount
 			break
 		}
 	}
 
 	if phase == "Pending" {
 		fmt.Println("容器启动中：", pname)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(5 * time.Second)
 		MonitorRancher(name, startTime)
 	} else if phase == "Running" {
 		duration := time.Now().Sub(startTime)
-		if duration.Seconds() >= 30 {
+		if duration.Seconds() >= 35 && pCount <= 1 {
 			fmt.Println("容器启动成功：", pname)
+			isSendRancherMsg(true, pname)
+		} else if duration.Seconds() >= 35 && pCount >= 1 {
+			fmt.Println("容器启动失败：", pname)
+			isSendRancherMsg(false, pname)
+		} else {
+			time.Sleep(5 * time.Second)
+			MonitorRancher(name, startTime)
 		}
 	}
 }
@@ -181,18 +190,21 @@ func MonitorJenkins(jenkins *gojenkins.Jenkins, ctx context.Context, name string
 			time.Sleep(5 * time.Second)
 		} else {
 			fmt.Println("构建", switchResult(build.GetResult()), "：", name)
-			isSendMsg(build)
 			running = false
+			isSendJenkinsMsg(build)
 		}
 	}
 }
 
-func isSendMsg(build *gojenkins.Build) {
+func isSendJenkinsMsg(build *gojenkins.Build) {
 	has := false
 	if build.GetResult() == "SUCCESS" {
 		has = true
 	}
-	Webhook(has, build.Job)
+	JenkinsWebhook(has, build.Job.Raw.Name, GetConf(Engine, Web_Hook).Url)
+}
+func isSendRancherMsg(has bool, name string) {
+	RancherWebhook(has, name, GetConf(Engine, Web_Hook).Url)
 }
 
 func switchResult(item interface{}) (result string) {

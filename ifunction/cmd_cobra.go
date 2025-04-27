@@ -34,6 +34,7 @@ var PublishApp = &cobra.Command{
 		suggest := Suggest(config, name)
 		if len(suggest) == 0 {
 			// 重试
+			time.Sleep(100 * time.Millisecond)
 			suggest = Suggest(config, name)
 		}
 
