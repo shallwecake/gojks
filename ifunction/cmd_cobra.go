@@ -33,6 +33,11 @@ var PublishApp = &cobra.Command{
 		}
 		suggest := Suggest(config, name)
 		if len(suggest) == 0 {
+			// 重试
+			suggest = Suggest(config, name)
+		}
+
+		if len(suggest) == 0 {
 			fmt.Printf("没有找到构建名称 %s\n", name)
 		} else {
 			ctx := context.Background()
@@ -41,7 +46,6 @@ var PublishApp = &cobra.Command{
 			if err != nil {
 				panic("连接 Jenkins 失败: " + err.Error())
 			}
-			//fmt.Println("Jenkins 连接成功")
 			// 构建
 			PublishJob(jenkins, ctx, suggest)
 		}

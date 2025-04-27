@@ -8,10 +8,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 func isJobInQueue(jenkins *gojenkins.Jenkins, jobName string, ctx context.Context, second int) {
+	time.Sleep(5 * time.Second)
 	// 获取队列对象
 	queue, _ := jenkins.GetQueue(ctx)
 	// 遍历队列中的所有任务
@@ -37,11 +39,6 @@ func isJobInQueue(jenkins *gojenkins.Jenkins, jobName string, ctx context.Contex
 	}
 
 	if is {
-		for i := 1; i <= 3; i++ {
-			second += 1
-			time.Sleep(1 * time.Second)
-			timeMsgPrint("队列中", second)
-		}
 		isJobInQueue(jenkins, jobName, ctx, second)
 	}
 }
@@ -91,29 +88,43 @@ func PublishJob(jenkins *gojenkins.Jenkins, ctx context.Context, suggest []strin
 	}
 
 	scanner := bufio.NewScanner(os.Stdin)
-
+	var wg sync.WaitGroup
 	fmt.Print("请输入构建的序号：")
 	if scanner.Scan() { // 读取一行
 		input := scanner.Text() // 获取文本（自动去除换行符）
-		i, _ := strconv.Atoi(input)
-		name := suggest[i]
 
-		// 触发指定任务（Job）的构建
-		_, err := jenkins.BuildJob(ctx, name, nil)
-		if err != nil {
-			panic("触发构建失败: " + err.Error())
+		split := strings.Split(input, ",")
+
+		for _, jobId := range split {
+
+			i, _ := strconv.Atoi(jobId)
+			jobName := suggest[i]
+
+			go func(buildName string) {
+				defer wg.Done()
+				wg.Add(1)
+				// 触发指定任务（Job）的构建
+				_, err := jenkins.BuildJob(ctx, buildName, nil)
+				if err != nil {
+					panic("触发构建失败: " + err.Error())
+				}
+				fmt.Println("正在准备构建：", buildName)
+				isJobInQueue(jenkins, buildName, ctx, 0)
+				fmt.Println("开始构建：", buildName)
+				MonitorJenkins(jenkins, ctx, buildName)
+				fmt.Println("容器启动中：", buildName)
+				MonitorRancher(buildName)
+
+			}(jobName)
+
+			time.Sleep(100 * time.Millisecond) // 避免CPU跑满
 		}
 
-		msgPrint("正在准备构建,请稍等...")
-		time.Sleep(2 * time.Second) // 避免CPU跑满
-		isJobInQueue(jenkins, name, ctx, 0)
-		MonitorJenkins(jenkins, ctx, name)
-		MonitorRancher(name)
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Println("读取错误:", err)
 	}
-
+	wg.Wait()
 	closePrint()
 }
 
@@ -151,19 +162,15 @@ func MonitorRancher(name string) {
 }
 
 func MonitorJenkins(jenkins *gojenkins.Jenkins, ctx context.Context, name string) {
+	fmt.Println("构建中：", name)
 	running := true
-	var loopCount int
 	job, _ := jenkins.GetJob(ctx, name)
 	lastBuild, _ := job.GetLastBuild(ctx)
 	for running {
 		number := lastBuild.GetBuildNumber()
 		build, _ := job.GetBuild(ctx, number)
 		if build.IsRunning(ctx) {
-			for i := 1; i <= 5; i++ {
-				loopCount += 1
-				time.Sleep(1 * time.Second)
-				timeMsgPrint("构建中", loopCount)
-			}
+			time.Sleep(5 * time.Second)
 		} else {
 			refreshPrint()
 			fmt.Printf("构建%s", switchResult(build.GetResult()))
