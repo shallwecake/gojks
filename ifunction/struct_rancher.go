@@ -179,7 +179,7 @@ type Status struct {
 	PodIP             string            `json:"podIP"`
 	PodIPs            []PodIP           `json:"podIPs"`
 	QOSClass          string            `json:"qosClass"`
-	StartTime         string            `json:"startTime"` // 可改为 time.Time，根据格式调整
+	StartTime         time.Time         `json:"startTime"` // 可改为 time.Time，根据格式调整
 }
 
 // Condition 表示 Pod 的状态条件

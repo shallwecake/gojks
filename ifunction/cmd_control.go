@@ -112,8 +112,7 @@ func PublishJob(jenkins *gojenkins.Jenkins, ctx context.Context, suggest []strin
 				isJobInQueue(jenkins, buildName, ctx, 0)
 				fmt.Println("开始构建：", buildName)
 				MonitorJenkins(jenkins, ctx, buildName)
-				fmt.Println("容器启动中：", buildName)
-				MonitorRancher(buildName)
+				MonitorRancher(buildName, time.Now())
 
 			}(jobName)
 
@@ -128,7 +127,12 @@ func PublishJob(jenkins *gojenkins.Jenkins, ctx context.Context, suggest []strin
 	closePrint()
 }
 
-func MonitorRancher(name string) {
+func MonitorRancher(name string, startTime time.Time) {
+
+	index := strings.LastIndex(name, "-")
+	realName := name[:index]
+	env := name[index+1:]
+
 	conf := GetConf(Engine, Ran_Cher)
 	access := &Access{
 		AccessKey: conf.Username,
@@ -137,28 +141,32 @@ func MonitorRancher(name string) {
 
 	rancher := NewRancher(access, conf.Url)
 
-	switch {
-	case strings.Contains(name, "test"):
-		clusters := rancher.GetClusters("test")
-		data := clusters.Data[0]
-		pods := rancher.GetPodList(data.ID, data.Name).Data
+	clusters := rancher.GetClusters(env)
+	data := clusters.Data[0]
+	pods := rancher.GetPodList(data.ID, data.Name).Data
 
-		for _, pod := range pods {
-			pname := pod.Metadata.Labels["app"]
+	var phase string
+	var pname string
+
+	for _, pod := range pods {
+		pname = pod.Metadata.Labels["app"]
+		if strings.Contains(pname, realName) {
 			//id := pod.ID
-			phase := pod.Status.Phase
-			startTime := pod.Status.StartTime
-			fmt.Println(pname + " " + phase + " " + startTime)
+			phase = pod.Status.Phase
+			break
 		}
-
-	case strings.Contains(name, "pre"):
-
-	default:
-
 	}
-	//// 判断是否包含 "test" 或 "pre"
-	//containsTest := strings.Contains(name, "test")
-	//containsPre := strings.Contains(name, "pre")
+
+	if phase == "Pending" {
+		fmt.Println("容器启动中：", pname)
+		time.Sleep(100 * time.Millisecond)
+		MonitorRancher(name, startTime)
+	} else if phase == "Running" {
+		duration := time.Now().Sub(startTime)
+		if duration.Seconds() >= 30 {
+			fmt.Println("容器启动成功：", pname)
+		}
+	}
 }
 
 func MonitorJenkins(jenkins *gojenkins.Jenkins, ctx context.Context, name string) {
@@ -172,8 +180,7 @@ func MonitorJenkins(jenkins *gojenkins.Jenkins, ctx context.Context, name string
 		if build.IsRunning(ctx) {
 			time.Sleep(5 * time.Second)
 		} else {
-			refreshPrint()
-			fmt.Printf("构建%s", switchResult(build.GetResult()))
+			fmt.Println("构建", switchResult(build.GetResult()), "：", name)
 			isSendMsg(build)
 			running = false
 		}
